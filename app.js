@@ -5,6 +5,7 @@ const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 let map;
 let marker;
 let circle;
+let circleHalo;
 
 function initMap() {
   map = L.map("map").setView(DEFAULT_CENTER, 11);
@@ -83,15 +84,26 @@ function setPoint(lat, lng) {
     marker = L.marker([lat, lng]).addTo(map);
   }
 
+  if (circleHalo) {
+    circleHalo.setLatLng([lat, lng]);
+  } else {
+    circleHalo = L.circle([lat, lng], {
+      radius: RADIUS_METERS,
+      color: "#ffffff",
+      weight: 6,
+      fill: false,
+    }).addTo(map);
+  }
+
   if (circle) {
     circle.setLatLng([lat, lng]);
   } else {
     circle = L.circle([lat, lng], {
       radius: RADIUS_METERS,
-      color: "#2c5f7c",
-      fillColor: "#2c5f7c",
+      color: "#d6336c",
+      fillColor: "#d6336c",
       fillOpacity: 0.1,
-      weight: 2,
+      weight: 3,
     }).addTo(map);
   }
 }
