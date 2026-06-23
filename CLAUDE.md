@@ -33,7 +33,7 @@
 
 ### プッシュ先
 
-GitHub リポジトリは未作成（2026-06-23 時点）。リポジトリ作成・`git init` / `git remote add origin <URL>` を行った時点で、ここに URL を追記すること。
+https://github.com/yhiguchi-collab/syuttensien-app.git （main ブランチ）
 
 ### 手順
 
