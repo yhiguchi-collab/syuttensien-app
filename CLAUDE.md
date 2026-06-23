@@ -13,7 +13,8 @@
 ## 技術スタック
 
 - HTML5 / CSS3 / JavaScript (Vanilla JS)
-- 地図表示には外部ライブラリを CDN 経由で利用（例: Leaflet 等。導入時にここへ追記する）
+- 地図表示: Leaflet + OpenStreetMap（CDN 経由、無料・APIキー不要）
+- 住所検索（ジオコーディング）: Nominatim（OpenStreetMap、無料・レート制限に注意）
 - ビルドツール不使用
 
 ## コーディング規約

@@ -1,20 +1,21 @@
 const RADIUS_METERS = 10000;
-const DEFAULT_CENTER = { lat: 35.681236, lng: 139.767125 }; // 東京駅
+const DEFAULT_CENTER = [35.681236, 139.767125]; // 東京駅
+const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 
 let map;
-let geocoder;
 let marker;
 let circle;
 
 function initMap() {
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: DEFAULT_CENTER,
-    zoom: 11,
-  });
-  geocoder = new google.maps.Geocoder();
+  map = L.map("map").setView(DEFAULT_CENTER, 11);
 
-  map.addListener("click", (event) => {
-    setPoint(event.latLng);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  }).addTo(map);
+
+  map.on("click", (event) => {
+    setPoint(event.latlng.lat, event.latlng.lng);
   });
 
   document.getElementById("search-button").addEventListener("click", searchAddress);
@@ -25,42 +26,51 @@ function initMap() {
   });
 }
 
-function searchAddress() {
+async function searchAddress() {
   const address = document.getElementById("address-input").value.trim();
   if (!address) {
     return;
   }
 
-  geocoder.geocode({ address }, (results, status) => {
-    if (status !== "OK" || !results[0]) {
+  const params = new URLSearchParams({ q: address, format: "json", limit: "1" });
+
+  try {
+    const response = await fetch(`${NOMINATIM_URL}?${params}`);
+    const results = await response.json();
+
+    if (results.length === 0) {
       alert("該当する地点が見つかりませんでした");
       return;
     }
-    setPoint(results[0].geometry.location);
+
+    const { lat, lon } = results[0];
+    setPoint(parseFloat(lat), parseFloat(lon));
     map.setZoom(12);
-  });
+  } catch (error) {
+    alert("検索中にエラーが発生しました");
+  }
 }
 
-function setPoint(location) {
-  map.setCenter(location);
+function setPoint(lat, lng) {
+  map.setView([lat, lng]);
 
   if (marker) {
-    marker.setPosition(location);
+    marker.setLatLng([lat, lng]);
   } else {
-    marker = new google.maps.Marker({ position: location, map });
+    marker = L.marker([lat, lng]).addTo(map);
   }
 
   if (circle) {
-    circle.setCenter(location);
+    circle.setLatLng([lat, lng]);
   } else {
-    circle = new google.maps.Circle({
-      center: location,
+    circle = L.circle([lat, lng], {
       radius: RADIUS_METERS,
-      map,
+      color: "#2c5f7c",
       fillColor: "#2c5f7c",
       fillOpacity: 0.1,
-      strokeColor: "#2c5f7c",
-      strokeWeight: 2,
-    });
+      weight: 2,
+    }).addTo(map);
   }
 }
+
+document.addEventListener("DOMContentLoaded", initMap);
