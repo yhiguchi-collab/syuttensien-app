@@ -13,7 +13,7 @@
 ## 技術スタック
 
 - HTML5 / CSS3 / JavaScript (Vanilla JS)
-- 地図表示: Leaflet + OpenStreetMap（CDN 経由、無料・APIキー不要）
+- 地図表示: Leaflet + OpenStreetMap（地図）/ Esri World Imagery（航空写真、レイヤー切り替え可）（CDN 経由、無料・APIキー不要）
 - 住所検索（ジオコーディング）: Nominatim（OpenStreetMap、無料・レート制限に注意）
 - ビルドツール不使用
 

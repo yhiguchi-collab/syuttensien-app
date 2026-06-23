@@ -9,10 +9,22 @@ let circle;
 function initMap() {
   map = L.map("map").setView(DEFAULT_CENTER, 11);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  const streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
   }).addTo(map);
+
+  const satelliteLayer = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      attribution: "Tiles &copy; Esri",
+      maxZoom: 19,
+    }
+  );
+
+  L.control
+    .layers({ "地図": streetLayer, "航空写真": satelliteLayer })
+    .addTo(map);
 
   map.on("click", (event) => {
     setPoint(event.latlng.lat, event.latlng.lng);
