@@ -68,3 +68,9 @@ main {
   flex: 1;
   min-height: 0;
 }
+
+/* 航空写真の上に地図タイルを重ねた際、白背景を透過させ道路・地名のみ見せる */
+.gsi-label-overlay {
+  mix-blend-mode: multiply;
+  filter: contrast(1.6) saturate(1.3);
+}

@@ -1,5 +1,5 @@
 const RADIUS_METERS = 10000;
-const DEFAULT_CENTER = [35.681236, 139.767125]; // 東京駅
+const DEFAULT_CENTER = [33.590355, 130.401716]; // 福岡市（天神）
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 
 let map;
@@ -9,21 +9,32 @@ let circle;
 function initMap() {
   map = L.map("map").setView(DEFAULT_CENTER, 11);
 
-  const streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-  }).addTo(map);
+  const GSI_ATTRIBUTION = '&copy; <a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>';
+
+  const streetLayer = L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", {
+    attribution: GSI_ATTRIBUTION,
+    maxZoom: 18,
+  });
 
   const satelliteLayer = L.tileLayer(
-    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg",
     {
-      attribution: "Tiles &copy; Esri",
-      maxZoom: 19,
+      attribution: GSI_ATTRIBUTION,
+      maxZoom: 18,
     }
-  );
+  ).addTo(map);
+
+  const labelsLayer = L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", {
+    attribution: GSI_ATTRIBUTION,
+    maxZoom: 18,
+    className: "gsi-label-overlay",
+  }).addTo(map);
 
   L.control
-    .layers({ "地図": streetLayer, "航空写真": satelliteLayer })
+    .layers(
+      { "地図": streetLayer, "航空写真": satelliteLayer },
+      { "地名ラベル": labelsLayer }
+    )
     .addTo(map);
 
   map.on("click", (event) => {
