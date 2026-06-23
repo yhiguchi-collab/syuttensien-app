@@ -3,3 +3,4 @@ desktop.ini
 .DS_Store
 *.env
 .env
+config.js
