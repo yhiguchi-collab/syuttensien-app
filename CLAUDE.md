@@ -13,8 +13,9 @@
 ## 技術スタック
 
 - HTML5 / CSS3 / JavaScript (Vanilla JS)
-- 地図表示: Leaflet + OpenStreetMap（地図）/ Esri World Imagery（航空写真、レイヤー切り替え可）（CDN 経由、無料・APIキー不要）
+- 地図表示: Leaflet + 国土地理院（GSI）タイル（淡色地図/航空写真/地名ラベル、レイヤー切り替え可）（CDN 経由、無料・APIキー不要）
 - 住所検索（ジオコーディング）: Nominatim（OpenStreetMap、無料・レート制限に注意）
+- 年齢別人口: e-Stat API（令和2年国勢調査 1kmメッシュ統計）。`mesh.js`で検索地点から半径10km圏内の3次メッシュコードを算出し、`population.js`で年齢区分別人口を集計して表示。e-StatのappIdは`config.js`（.gitignore対象）で管理し、`config.example.js`をテンプレートとする
 - ビルドツール不使用
 
 ## コーディング規約
