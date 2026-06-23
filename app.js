@@ -1,4 +1,4 @@
-const RADIUS_METERS = 10000;
+const RADIUS_METERS = 8000;
 const DEFAULT_CENTER = [33.590355, 130.401716]; // 福岡市（天神）
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 
