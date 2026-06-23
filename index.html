@@ -18,10 +18,21 @@
       <button id="search-button">検索</button>
       <p class="hint">地図をクリックして地点を指定することもできます</p>
     </div>
-    <div id="map"></div>
+    <div id="map-row">
+      <div id="map"></div>
+      <div id="info-panel">
+        <h2>半径10km圏内の年齢別人口</h2>
+        <p id="info-status" class="hint">地点を指定すると表示されます</p>
+        <ul id="population-list"></ul>
+      </div>
+    </div>
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="config.js"></script>
+  <script src="mesh.js"></script>
+  <script src="mesh1-table-ids.js"></script>
+  <script src="population.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

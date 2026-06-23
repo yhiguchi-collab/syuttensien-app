@@ -78,6 +78,9 @@ async function searchAddress() {
 function setPoint(lat, lng) {
   map.setView([lat, lng]);
 
+  const meshCodes = getMeshCodesInRadius(lat, lng, RADIUS_METERS);
+  updatePopulationPanel(meshCodes);
+
   if (marker) {
     marker.setLatLng([lat, lng]);
   } else {
@@ -105,6 +108,24 @@ function setPoint(lat, lng) {
       fillOpacity: 0.1,
       weight: 3,
     }).addTo(map);
+  }
+}
+
+async function updatePopulationPanel(meshCodes) {
+  const statusEl = document.getElementById("info-status");
+  const listEl = document.getElementById("population-list");
+
+  statusEl.textContent = "人口データを取得中…";
+  listEl.innerHTML = "";
+
+  try {
+    const results = await fetchAgePopulationInRadius(meshCodes);
+    statusEl.textContent = "令和2年国勢調査（1kmメッシュ）に基づく集計";
+    listEl.innerHTML = results
+      .map((r) => `<li><span>${r.label}</span><span>${r.value.toLocaleString()}人</span></li>`)
+      .join("");
+  } catch (error) {
+    statusEl.textContent = "人口データの取得に失敗しました";
   }
 }
 

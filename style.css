@@ -64,9 +64,42 @@ main {
   color: #666;
 }
 
+#map-row {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
 #map {
   flex: 1;
   min-height: 0;
+}
+
+#info-panel {
+  flex: 0 0 280px;
+  padding: 16px;
+  background-color: #f4f6f7;
+  border-left: 1px solid #ddd;
+  overflow-y: auto;
+}
+
+#info-panel h2 {
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: #2c5f7c;
+}
+
+#population-list {
+  list-style: none;
+  margin-top: 8px;
+}
+
+#population-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
 }
 
 /* 航空写真の上に地図タイルを重ねた際、白背景を透過させ道路・地名のみ見せる */
