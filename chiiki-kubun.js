@@ -5,6 +5,11 @@ const CHIIKI_KUBUN_RATE = {
   1: 20, 2: 16, 3: 15, 4: 12, 5: 10, 6: 6, 7: 3, 0: 0,
 };
 
+// 1単位の単価（円）。人件費割合70%区分（訪問介護／訪問看護／居宅介護支援等）の単価。
+const CHIIKI_KUBUN_UNIT_PRICE = {
+  1: 11.40, 2: 11.12, 3: 11.05, 4: 10.84, 5: 10.70, 6: 10.42, 7: 10.21, 0: 10.00,
+};
+
 // NominatimのISO3166-2-lvl4コード（JP-xx）から都道府県名への変換表。
 // 東京23区などはprovince/state項目が無いレスポンスがあるため、これを優先的に使う。
 const JP_PREFECTURE_BY_ISO_CODE = {
@@ -219,8 +224,9 @@ function getChiikiKubunGrade(prefecture, municipality) {
 }
 
 function getChiikiKubunLabel(grade) {
+  const unitPrice = CHIIKI_KUBUN_UNIT_PRICE[grade].toFixed(2);
   if (grade === 0) {
-    return `その他（上乗せ${CHIIKI_KUBUN_RATE[0]}%）`;
+    return `その他（1単位＝${unitPrice}円）`;
   }
-  return `${grade}級地（上乗せ${CHIIKI_KUBUN_RATE[grade]}%）`;
+  return `${grade}級地（1単位＝${unitPrice}円）`;
 }
