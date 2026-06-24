@@ -9,13 +9,19 @@ let circle;
 let circleHalo;
 
 function initMap() {
-  map = L.map("map").setView(DEFAULT_CENTER, 11);
+  const worldBounds = L.latLngBounds([-90, -180], [90, 180]);
+
+  map = L.map("map", {
+    maxBounds: worldBounds,
+    maxBoundsViscosity: 1.0,
+  }).setView(DEFAULT_CENTER, 11);
 
   const GSI_ATTRIBUTION = '&copy; <a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>';
 
   const streetLayer = L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
     attribution: GSI_ATTRIBUTION,
     maxZoom: 18,
+    noWrap: true,
   });
 
   const satelliteLayer = L.tileLayer(
@@ -23,12 +29,14 @@ function initMap() {
     {
       attribution: GSI_ATTRIBUTION,
       maxZoom: 18,
+      noWrap: true,
     }
   ).addTo(map);
 
   const labelsLayer = L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", {
     attribution: GSI_ATTRIBUTION,
     maxZoom: 18,
+    noWrap: true,
     className: "gsi-label-overlay",
   }).addTo(map);
 
