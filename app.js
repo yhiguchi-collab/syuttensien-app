@@ -90,6 +90,7 @@ function setPoint(lat, lng) {
   const meshCodes = getMeshCodesInRadius(lat, lng, RADIUS_METERS);
   updatePopulationPanel(meshCodes);
   updateChiikiKubunPanel(lat, lng);
+  updateHoukanStPanel(lat, lng);
 
   if (marker) {
     marker.setLatLng([lat, lng]);
@@ -173,6 +174,12 @@ async function updateChiikiKubunPanel(lat, lng) {
   } catch (error) {
     statusEl.textContent = "地域区分の取得に失敗しました";
   }
+}
+
+function updateHoukanStPanel(lat, lng) {
+  const statusEl = document.getElementById("houkan-status");
+  const count = countFacilitiesInRadius(HOUKAN_ST_DATA, lat, lng, RADIUS_METERS);
+  statusEl.textContent = `${count.toLocaleString()}件（厚労省 介護サービス情報公表システムより）`;
 }
 
 document.addEventListener("DOMContentLoaded", initMap);
