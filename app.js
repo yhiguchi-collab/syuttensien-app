@@ -1,6 +1,7 @@
 const RADIUS_METERS = 10000;
 const DEFAULT_CENTER = [33.590355, 130.401716]; // 福岡市（天神）
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+const NOMINATIM_REVERSE_URL = "https://nominatim.openstreetmap.org/reverse";
 
 let map;
 let marker;
@@ -80,6 +81,7 @@ function setPoint(lat, lng) {
 
   const meshCodes = getMeshCodesInRadius(lat, lng, RADIUS_METERS);
   updatePopulationPanel(meshCodes);
+  updateChiikiKubunPanel(lat, lng);
 
   if (marker) {
     marker.setLatLng([lat, lng]);
@@ -126,6 +128,42 @@ async function updatePopulationPanel(meshCodes) {
       .join("");
   } catch (error) {
     statusEl.textContent = "人口データの取得に失敗しました";
+  }
+}
+
+async function updateChiikiKubunPanel(lat, lng) {
+  const statusEl = document.getElementById("chiiki-status");
+  const valueEl = document.getElementById("chiiki-value");
+
+  statusEl.textContent = "市区町村を判定中…";
+  valueEl.textContent = "";
+
+  try {
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lon: String(lng),
+      format: "json",
+      "accept-language": "ja",
+    });
+    const response = await fetch(`${NOMINATIM_REVERSE_URL}?${params}`);
+    const result = await response.json();
+    const address = result.address || {};
+
+    const isoCode = address["ISO3166-2-lvl4"];
+    const prefecture = (isoCode && JP_PREFECTURE_BY_ISO_CODE[isoCode]) || address.province || address.state;
+    const municipality =
+      address.city || address.town || address.village || address.city_district || address.municipality;
+
+    if (!prefecture || !municipality) {
+      statusEl.textContent = "市区町村を特定できませんでした";
+      return;
+    }
+
+    const grade = getChiikiKubunGrade(prefecture, municipality);
+    statusEl.textContent = `${prefecture}${municipality}`;
+    valueEl.textContent = getChiikiKubunLabel(grade);
+  } catch (error) {
+    statusEl.textContent = "地域区分の取得に失敗しました";
   }
 }
 
