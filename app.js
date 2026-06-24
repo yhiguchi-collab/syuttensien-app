@@ -91,6 +91,7 @@ function setPoint(lat, lng) {
   updatePopulationPanel(meshCodes);
   updateChiikiKubunPanel(lat, lng);
   updateHoukanStPanel(lat, lng);
+  updateHospitalPanel(lat, lng);
 
   if (marker) {
     marker.setLatLng([lat, lng]);
@@ -180,6 +181,16 @@ function updateHoukanStPanel(lat, lng) {
   const statusEl = document.getElementById("houkan-status");
   const count = countFacilitiesInRadius(HOUKAN_ST_DATA, lat, lng, RADIUS_METERS);
   statusEl.textContent = `${count.toLocaleString()}件（厚労省 介護サービス情報公表システムより）`;
+}
+
+function updateHospitalPanel(lat, lng) {
+  const generalCount = countFacilitiesInRadius(HOSPITAL_GENERAL_DATA, lat, lng, RADIUS_METERS);
+  const psychiatricCount = countFacilitiesInRadius(HOSPITAL_PSYCHIATRIC_DATA, lat, lng, RADIUS_METERS);
+
+  document.getElementById("hospital-general-status").textContent =
+    `精神科以外: ${generalCount.toLocaleString()}件`;
+  document.getElementById("hospital-psychiatric-status").textContent =
+    `精神科: ${psychiatricCount.toLocaleString()}件`;
 }
 
 document.addEventListener("DOMContentLoaded", initMap);
