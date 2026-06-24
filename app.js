@@ -188,7 +188,7 @@ function updateHospitalPanel(lat, lng) {
   const psychiatricCount = countFacilitiesInRadius(HOSPITAL_PSYCHIATRIC_DATA, lat, lng, RADIUS_METERS);
 
   document.getElementById("hospital-general-status").textContent =
-    `精神科以外: ${generalCount.toLocaleString()}件`;
+    `総合病院: ${generalCount.toLocaleString()}件`;
   document.getElementById("hospital-psychiatric-status").textContent =
     `精神科: ${psychiatricCount.toLocaleString()}件`;
 }
