@@ -92,6 +92,7 @@ function setPoint(lat, lng) {
   updateChiikiKubunPanel(lat, lng);
   updateHoukanStPanel(lat, lng);
   updateHospitalPanel(lat, lng);
+  updateHomeVisitPanel(lat, lng);
 
   if (marker) {
     marker.setLatLng([lat, lng]);
@@ -191,6 +192,12 @@ function updateHospitalPanel(lat, lng) {
     `総合病院: ${generalCount.toLocaleString()}件`;
   document.getElementById("hospital-psychiatric-status").textContent =
     `精神科: ${psychiatricCount.toLocaleString()}件`;
+}
+
+function updateHomeVisitPanel(lat, lng) {
+  const statusEl = document.getElementById("home-visit-status");
+  const count = countFacilitiesInRadius(HOME_VISIT_CLINIC_DATA, lat, lng, RADIUS_METERS);
+  statusEl.textContent = `${count.toLocaleString()}件（在宅療養支援診療所・病院＝機能強化型のみ、九州・沖縄地方のみ対応）`;
 }
 
 document.addEventListener("DOMContentLoaded", initMap);
