@@ -77,15 +77,14 @@ async function searchAddress() {
     }
 
     const { lat, lon } = results[0];
-    setPoint(parseFloat(lat), parseFloat(lon));
-    map.setZoom(12);
+    setPoint(parseFloat(lat), parseFloat(lon), 12);
   } catch (error) {
     alert("検索中にエラーが発生しました");
   }
 }
 
-function setPoint(lat, lng) {
-  map.setView([lat, lng]);
+function setPoint(lat, lng, zoom) {
+  map.setView([lat, lng], zoom !== undefined ? zoom : map.getZoom());
 
   const meshCodes = getMeshCodesInRadius(lat, lng, RADIUS_METERS);
   updatePopulationPanel(meshCodes);
@@ -93,6 +92,8 @@ function setPoint(lat, lng) {
   updateHoukanStPanel(lat, lng);
   updateHospitalPanel(lat, lng);
   updateHomeVisitPanel(lat, lng);
+  updateCaremanagerPanel(lat, lng);
+  updateComprehensiveSupportPanel(lat, lng);
 
   if (marker) {
     marker.setLatLng([lat, lng]);
@@ -198,6 +199,18 @@ function updateHomeVisitPanel(lat, lng) {
   const statusEl = document.getElementById("home-visit-status");
   const count = countFacilitiesInRadius(HOME_VISIT_CLINIC_DATA, lat, lng, RADIUS_METERS);
   statusEl.textContent = `${count.toLocaleString()}件（在宅療養支援診療所・病院＝機能強化型のみ、九州・沖縄地方のみ対応）`;
+}
+
+function updateCaremanagerPanel(lat, lng) {
+  const statusEl = document.getElementById("caremanager-status");
+  const count = countFacilitiesInRadius(CAREMANAGER_OFFICE_DATA, lat, lng, RADIUS_METERS);
+  statusEl.textContent = `居宅介護支援事業所　${count.toLocaleString()}件`;
+}
+
+function updateComprehensiveSupportPanel(lat, lng) {
+  const statusEl = document.getElementById("comprehensive-support-status");
+  const count = countFacilitiesInRadius(COMPREHENSIVE_SUPPORT_CENTER_DATA, lat, lng, RADIUS_METERS);
+  statusEl.textContent = `地域包括支援センター　${count.toLocaleString()}件`;
 }
 
 document.addEventListener("DOMContentLoaded", initMap);
