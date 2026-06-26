@@ -49,18 +49,42 @@ function initMap() {
   });
 
   let ownStoreHoverCircle = null;
+  const fixedStoreCircles = new Map();
+  const fixedCircleHistory = []; // { layer, marker } の順序付き履歴（marker は店舗固定時のみ設定）
+
+  function makeOwnStoreCircle(lat, lng) {
+    return L.circle([lat, lng], {
+      radius: RADIUS_METERS,
+      color: "#ffb400",
+      fillColor: "#ffb400",
+      fillOpacity: 0.08,
+      weight: 3,
+    });
+  }
+
+  function updateFixButtonLabel(ownMarker) {
+    const popupEl = ownMarker.getPopup() && ownMarker.getPopup().getElement();
+    if (!popupEl) {
+      return;
+    }
+    const button = popupEl.querySelector(".fix-circle-button");
+    if (button) {
+      button.textContent = fixedStoreCircles.has(ownMarker) ? "円を解除" : "円を固定";
+    }
+  }
 
   const ownStoreLayer = L.layerGroup(
     OWN_STORE_DATA.map(([lat, lng, name]) => {
       const ownMarker = L.marker([lat, lng], { icon: ownStoreIcon }).bindTooltip(name);
+      ownMarker.bindPopup(
+        `<div>${name}</div><button type="button" class="fix-circle-button">円を固定</button>`
+      );
+
       ownMarker.on("mouseover", () => {
-        ownStoreHoverCircle = L.circle([lat, lng], {
-          radius: RADIUS_METERS,
-          color: "#ffb400",
-          fillColor: "#ffb400",
-          fillOpacity: 0.08,
-          weight: 3,
-        }).addTo(map);
+        if (fixedStoreCircles.has(ownMarker)) {
+          return;
+        }
+        ownStoreHoverCircle = makeOwnStoreCircle(lat, lng).addTo(map);
       });
       ownMarker.on("mouseout", () => {
         if (ownStoreHoverCircle) {
@@ -68,9 +92,55 @@ function initMap() {
           ownStoreHoverCircle = null;
         }
       });
+
+      ownMarker.on("popupopen", () => {
+        updateFixButtonLabel(ownMarker);
+        const popupEl = ownMarker.getPopup().getElement();
+        const button = popupEl.querySelector(".fix-circle-button");
+        button.addEventListener("click", () => {
+          if (fixedStoreCircles.has(ownMarker)) {
+            map.removeLayer(fixedStoreCircles.get(ownMarker));
+            fixedStoreCircles.delete(ownMarker);
+            const index = fixedCircleHistory.findIndex((entry) => entry.marker === ownMarker);
+            if (index !== -1) {
+              fixedCircleHistory.splice(index, 1);
+            }
+          } else {
+            if (ownStoreHoverCircle) {
+              map.removeLayer(ownStoreHoverCircle);
+              ownStoreHoverCircle = null;
+            }
+            const newCircle = makeOwnStoreCircle(lat, lng).addTo(map);
+            fixedStoreCircles.set(ownMarker, newCircle);
+            fixedCircleHistory.push({ layer: newCircle, marker: ownMarker });
+          }
+          updateFixButtonLabel(ownMarker);
+        });
+      });
+
       return ownMarker;
     })
   ).addTo(map);
+
+  document.getElementById("reset-fixed-circles-button").addEventListener("click", () => {
+    fixedCircleHistory.forEach((entry) => map.removeLayer(entry.layer));
+    fixedCircleHistory.length = 0;
+    const markers = Array.from(fixedStoreCircles.keys());
+    fixedStoreCircles.clear();
+    markers.forEach((marker) => updateFixButtonLabel(marker));
+  });
+
+  document.getElementById("undo-fixed-circle-button").addEventListener("click", () => {
+    const lastEntry = fixedCircleHistory.pop();
+    if (!lastEntry) {
+      return;
+    }
+    map.removeLayer(lastEntry.layer);
+    if (lastEntry.marker) {
+      fixedStoreCircles.delete(lastEntry.marker);
+      updateFixButtonLabel(lastEntry.marker);
+    }
+  });
 
   L.control
     .layers(
@@ -78,6 +148,14 @@ function initMap() {
       { "地名ラベル": labelsLayer, "自社店舗": ownStoreLayer }
     )
     .addTo(map);
+
+  document.getElementById("fix-current-circle-button").addEventListener("click", () => {
+    if (currentLat === undefined) {
+      return;
+    }
+    const newCircle = makeOwnStoreCircle(currentLat, currentLng).addTo(map);
+    fixedCircleHistory.push({ layer: newCircle, marker: null });
+  });
 
   map.on("click", (event) => {
     setPoint(event.latlng.lat, event.latlng.lng);
@@ -97,6 +175,8 @@ function initMap() {
       RADIUS_METERS = parseInt(button.dataset.radius, 10);
       document.getElementById("population-heading").textContent =
         `半径${RADIUS_METERS / 1000}km圏内の年齢別人口`;
+
+      fixedCircleHistory.forEach((entry) => entry.layer.setRadius(RADIUS_METERS));
 
       if (currentLat !== undefined) {
         setPoint(currentLat, currentLng);

@@ -21,7 +21,10 @@
         <button class="radius-button is-active" data-radius="10000">10km</button>
         <button class="radius-button" data-radius="12000">12km</button>
       </div>
-      <p class="hint">地図をクリックして地点を指定することもできます</p>
+      <button id="fix-current-circle-button">この円を固定</button>
+      <button id="undo-fixed-circle-button">1つ前を削除</button>
+      <button id="reset-fixed-circles-button">固定した円をリセット</button>
+      <p class="hint">地図をクリックして地点を指定／「この円を固定」でその場に円を残せます</p>
     </div>
     <div id="map-row">
       <div id="map"></div>
