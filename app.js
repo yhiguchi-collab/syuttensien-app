@@ -198,7 +198,7 @@ function updateHospitalPanel(lat, lng) {
 function updateHomeVisitPanel(lat, lng) {
   const statusEl = document.getElementById("home-visit-status");
   const count = countFacilitiesInRadius(HOME_VISIT_CLINIC_DATA, lat, lng, RADIUS_METERS);
-  statusEl.textContent = `${count.toLocaleString()}件（在宅療養支援診療所・病院＝機能強化型のみ、近畿地方以外は対応済み）`;
+  statusEl.textContent = `${count.toLocaleString()}件（在宅療養支援診療所・病院＝機能強化型のみ）`;
 }
 
 function updateCaremanagerPanel(lat, lng) {
