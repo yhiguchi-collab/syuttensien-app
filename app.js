@@ -62,61 +62,88 @@ function initMap() {
     });
   }
 
-  function updateFixButtonLabel(ownMarker) {
-    const popupEl = ownMarker.getPopup() && ownMarker.getPopup().getElement();
-    if (!popupEl) {
-      return;
-    }
-    const button = popupEl.querySelector(".fix-circle-button");
-    if (button) {
-      button.textContent = fixedStoreCircles.has(ownMarker) ? "円を解除" : "円を固定";
+  const hoverPanel = document.createElement("div");
+  hoverPanel.id = "store-hover-panel";
+  hoverPanel.innerHTML =
+    '<span class="store-hover-panel-name"></span><button type="button" class="fix-circle-button"></button>';
+  map.getContainer().appendChild(hoverPanel);
+  const hoverPanelName = hoverPanel.querySelector(".store-hover-panel-name");
+  const hoverPanelButton = hoverPanel.querySelector(".fix-circle-button");
+  let hoverPanelMarker = null;
+  let hidePanelTimer = null;
+
+  function updateFixButtonLabel() {
+    if (hoverPanelMarker) {
+      hoverPanelButton.textContent = fixedStoreCircles.has(hoverPanelMarker) ? "円を解除" : "円を固定";
     }
   }
 
+  function hideHoverPanel() {
+    hoverPanel.style.display = "none";
+    hoverPanelMarker = null;
+    if (ownStoreHoverCircle) {
+      map.removeLayer(ownStoreHoverCircle);
+      ownStoreHoverCircle = null;
+    }
+  }
+
+  function scheduleHideHoverPanel() {
+    clearTimeout(hidePanelTimer);
+    hidePanelTimer = setTimeout(hideHoverPanel, 250);
+  }
+
+  hoverPanel.addEventListener("mouseenter", () => clearTimeout(hidePanelTimer));
+  hoverPanel.addEventListener("mouseleave", scheduleHideHoverPanel);
+
+  hoverPanelButton.addEventListener("click", () => {
+    const ownMarker = hoverPanelMarker;
+    if (!ownMarker) {
+      return;
+    }
+    const { lat, lng } = ownMarker.getLatLng();
+    if (fixedStoreCircles.has(ownMarker)) {
+      map.removeLayer(fixedStoreCircles.get(ownMarker));
+      fixedStoreCircles.delete(ownMarker);
+      const index = fixedCircleHistory.findIndex((entry) => entry.marker === ownMarker);
+      if (index !== -1) {
+        fixedCircleHistory.splice(index, 1);
+      }
+    } else {
+      if (ownStoreHoverCircle) {
+        map.removeLayer(ownStoreHoverCircle);
+        ownStoreHoverCircle = null;
+      }
+      const newCircle = makeOwnStoreCircle(lat, lng).addTo(map);
+      fixedStoreCircles.set(ownMarker, newCircle);
+      fixedCircleHistory.push({ layer: newCircle, marker: ownMarker });
+    }
+    updateFixButtonLabel();
+  });
+
   const ownStoreLayer = L.layerGroup(
     OWN_STORE_DATA.map(([lat, lng, name]) => {
-      const ownMarker = L.marker([lat, lng], { icon: ownStoreIcon }).bindTooltip(name);
-      ownMarker.bindPopup(
-        `<div>${name}</div><button type="button" class="fix-circle-button">円を固定</button>`
-      );
+      const ownMarker = L.marker([lat, lng], { icon: ownStoreIcon });
 
       ownMarker.on("mouseover", () => {
-        if (fixedStoreCircles.has(ownMarker)) {
-          return;
-        }
-        ownStoreHoverCircle = makeOwnStoreCircle(lat, lng).addTo(map);
-      });
-      ownMarker.on("mouseout", () => {
+        clearTimeout(hidePanelTimer);
         if (ownStoreHoverCircle) {
           map.removeLayer(ownStoreHoverCircle);
           ownStoreHoverCircle = null;
         }
-      });
+        hoverPanelMarker = ownMarker;
+        hoverPanelName.textContent = name;
+        updateFixButtonLabel();
 
-      ownMarker.on("popupopen", () => {
-        updateFixButtonLabel(ownMarker);
-        const popupEl = ownMarker.getPopup().getElement();
-        const button = popupEl.querySelector(".fix-circle-button");
-        button.addEventListener("click", () => {
-          if (fixedStoreCircles.has(ownMarker)) {
-            map.removeLayer(fixedStoreCircles.get(ownMarker));
-            fixedStoreCircles.delete(ownMarker);
-            const index = fixedCircleHistory.findIndex((entry) => entry.marker === ownMarker);
-            if (index !== -1) {
-              fixedCircleHistory.splice(index, 1);
-            }
-          } else {
-            if (ownStoreHoverCircle) {
-              map.removeLayer(ownStoreHoverCircle);
-              ownStoreHoverCircle = null;
-            }
-            const newCircle = makeOwnStoreCircle(lat, lng).addTo(map);
-            fixedStoreCircles.set(ownMarker, newCircle);
-            fixedCircleHistory.push({ layer: newCircle, marker: ownMarker });
-          }
-          updateFixButtonLabel(ownMarker);
-        });
+        const point = map.latLngToContainerPoint([lat, lng]);
+        hoverPanel.style.left = `${point.x}px`;
+        hoverPanel.style.top = `${point.y - 50}px`;
+        hoverPanel.style.display = "block";
+
+        if (!fixedStoreCircles.has(ownMarker)) {
+          ownStoreHoverCircle = makeOwnStoreCircle(lat, lng).addTo(map);
+        }
       });
+      ownMarker.on("mouseout", scheduleHideHoverPanel);
 
       return ownMarker;
     })
