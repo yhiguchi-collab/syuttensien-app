@@ -1,4 +1,4 @@
-const RADIUS_METERS = 10000;
+let RADIUS_METERS = 10000;
 const DEFAULT_CENTER = [33.590355, 130.401716]; // 福岡市（天神）
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 const NOMINATIM_REVERSE_URL = "https://nominatim.openstreetmap.org/reverse";
@@ -7,6 +7,8 @@ let map;
 let marker;
 let circle;
 let circleHalo;
+let currentLat;
+let currentLng;
 
 function initMap() {
   const worldBounds = L.latLngBounds([-90, -180], [90, 180]);
@@ -57,6 +59,20 @@ function initMap() {
       searchAddress();
     }
   });
+
+  document.querySelectorAll(".radius-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".radius-button").forEach((b) => b.classList.remove("is-active"));
+      button.classList.add("is-active");
+      RADIUS_METERS = parseInt(button.dataset.radius, 10);
+      document.getElementById("population-heading").textContent =
+        `半径${RADIUS_METERS / 1000}km圏内の年齢別人口`;
+
+      if (currentLat !== undefined) {
+        setPoint(currentLat, currentLng);
+      }
+    });
+  });
 }
 
 async function searchAddress() {
@@ -84,6 +100,8 @@ async function searchAddress() {
 }
 
 function setPoint(lat, lng, zoom) {
+  currentLat = lat;
+  currentLng = lng;
   map.setView([lat, lng], zoom !== undefined ? zoom : map.getZoom());
 
   const meshCodes = getMeshCodesInRadius(lat, lng, RADIUS_METERS);
@@ -104,6 +122,7 @@ function setPoint(lat, lng, zoom) {
 
   if (circleHalo) {
     circleHalo.setLatLng([lat, lng]);
+    circleHalo.setRadius(RADIUS_METERS);
   } else {
     circleHalo = L.circle([lat, lng], {
       radius: RADIUS_METERS,
@@ -115,6 +134,7 @@ function setPoint(lat, lng, zoom) {
 
   if (circle) {
     circle.setLatLng([lat, lng]);
+    circle.setRadius(RADIUS_METERS);
   } else {
     circle = L.circle([lat, lng], {
       radius: RADIUS_METERS,

@@ -16,12 +16,17 @@
     <div id="search-panel">
       <input id="address-input" type="text" placeholder="住所または地名を入力">
       <button id="search-button">検索</button>
+      <div id="radius-switch">
+        <button class="radius-button" data-radius="8000">8km</button>
+        <button class="radius-button is-active" data-radius="10000">10km</button>
+        <button class="radius-button" data-radius="12000">12km</button>
+      </div>
       <p class="hint">地図をクリックして地点を指定することもできます</p>
     </div>
     <div id="map-row">
       <div id="map"></div>
       <div id="info-panel">
-        <h2>半径10km圏内の年齢別人口</h2>
+        <h2 id="population-heading">半径10km圏内の年齢別人口</h2>
         <p id="info-status" class="hint">地点を指定すると表示されます</p>
         <ul id="population-list"></ul>
 

@@ -64,6 +64,30 @@ main {
   color: #666;
 }
 
+#radius-switch {
+  display: flex;
+  gap: 4px;
+}
+
+.radius-button {
+  padding: 6px 12px;
+  font-size: 13px;
+  background-color: #fff;
+  color: #2c5f7c;
+  border: 1px solid #2c5f7c;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.radius-button:hover {
+  background-color: #e8f0f4;
+}
+
+.radius-button.is-active {
+  background-color: #2c5f7c;
+  color: #fff;
+}
+
 #map-row {
   flex: 1;
   display: flex;
