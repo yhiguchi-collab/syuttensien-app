@@ -94,6 +94,7 @@ function setPoint(lat, lng, zoom) {
   updateHomeVisitPanel(lat, lng);
   updateCaremanagerPanel(lat, lng);
   updateComprehensiveSupportPanel(lat, lng);
+  updateConsultationOfficePanel(lat, lng);
 
   if (marker) {
     marker.setLatLng([lat, lng]);
@@ -211,6 +212,16 @@ function updateComprehensiveSupportPanel(lat, lng) {
   const statusEl = document.getElementById("comprehensive-support-status");
   const count = countFacilitiesInRadius(COMPREHENSIVE_SUPPORT_CENTER_DATA, lat, lng, RADIUS_METERS);
   statusEl.textContent = `地域包括支援センター　${count.toLocaleString()}件`;
+}
+
+function updateConsultationOfficePanel(lat, lng) {
+  const officeCount = countFacilitiesInRadius(CONSULTATION_OFFICE_DATA, lat, lng, RADIUS_METERS);
+  const coreCount = countFacilitiesInRadius(CORE_CONSULTATION_CENTER_DATA, lat, lng, RADIUS_METERS);
+
+  document.getElementById("consultation-office-status").textContent =
+    `相談支援事業所　${officeCount.toLocaleString()}件`;
+  document.getElementById("core-consultation-status").textContent =
+    `基幹相談支援センター　${coreCount.toLocaleString()}件`;
 }
 
 document.addEventListener("DOMContentLoaded", initMap);
