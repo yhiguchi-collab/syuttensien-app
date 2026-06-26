@@ -48,10 +48,28 @@ function initMap() {
     iconSize: [24, 24],
   });
 
+  let ownStoreHoverCircle = null;
+
   const ownStoreLayer = L.layerGroup(
-    OWN_STORE_DATA.map(([lat, lng, name]) =>
-      L.marker([lat, lng], { icon: ownStoreIcon }).bindTooltip(name)
-    )
+    OWN_STORE_DATA.map(([lat, lng, name]) => {
+      const ownMarker = L.marker([lat, lng], { icon: ownStoreIcon }).bindTooltip(name);
+      ownMarker.on("mouseover", () => {
+        ownStoreHoverCircle = L.circle([lat, lng], {
+          radius: RADIUS_METERS,
+          color: "#ffb400",
+          fillColor: "#ffb400",
+          fillOpacity: 0.08,
+          weight: 3,
+        }).addTo(map);
+      });
+      ownMarker.on("mouseout", () => {
+        if (ownStoreHoverCircle) {
+          map.removeLayer(ownStoreHoverCircle);
+          ownStoreHoverCircle = null;
+        }
+      });
+      return ownMarker;
+    })
   ).addTo(map);
 
   L.control
