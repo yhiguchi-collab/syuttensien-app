@@ -88,6 +88,14 @@ main {
   color: #fff;
 }
 
+.own-store-icon {
+  font-size: 22px;
+  color: #ffb400;
+  text-shadow: 0 0 2px #000, 0 0 2px #000;
+  text-align: center;
+  line-height: 24px;
+}
+
 #map-row {
   flex: 1;
   display: flex;

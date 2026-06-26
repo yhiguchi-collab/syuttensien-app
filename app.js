@@ -42,10 +42,22 @@ function initMap() {
     className: "gsi-label-overlay",
   }).addTo(map);
 
+  const ownStoreIcon = L.divIcon({
+    className: "own-store-icon",
+    html: "★",
+    iconSize: [24, 24],
+  });
+
+  const ownStoreLayer = L.layerGroup(
+    OWN_STORE_DATA.map(([lat, lng, name]) =>
+      L.marker([lat, lng], { icon: ownStoreIcon }).bindTooltip(name)
+    )
+  ).addTo(map);
+
   L.control
     .layers(
       { "地図": streetLayer, "航空写真": satelliteLayer },
-      { "地名ラベル": labelsLayer }
+      { "地名ラベル": labelsLayer, "自社店舗": ownStoreLayer }
     )
     .addTo(map);
 
