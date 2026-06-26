@@ -193,7 +193,7 @@ function updateHospitalPanel(lat, lng) {
   document.getElementById("hospital-general-status").textContent =
     `総合病院: ${generalCount.toLocaleString()}件`;
   document.getElementById("hospital-psychiatric-status").textContent =
-    `精神科: ${psychiatricCount.toLocaleString()}件`;
+    `精神科病院: ${psychiatricCount.toLocaleString()}件`;
 }
 
 function updateHomeVisitPanel(lat, lng) {
