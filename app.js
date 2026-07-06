@@ -72,6 +72,17 @@ function initMap() {
   let hoverPanelMarker = null;
   let hidePanelTimer = null;
 
+  function updateMainCircleVisibility() {
+    if (!circle) {
+      return;
+    }
+    const hidden = fixedStoreCircles.size > 0;
+    circle.setStyle({ opacity: hidden ? 0 : 1, fillOpacity: hidden ? 0 : 0.1 });
+    if (circleHalo) {
+      circleHalo.setStyle({ opacity: hidden ? 0 : 1 });
+    }
+  }
+
   function updateFixButtonLabel() {
     if (hoverPanelMarker) {
       hoverPanelButton.textContent = fixedStoreCircles.has(hoverPanelMarker) ? "円を解除" : "円を固定";
@@ -118,6 +129,7 @@ function initMap() {
       fixedCircleHistory.push({ layer: newCircle, marker: ownMarker });
     }
     updateFixButtonLabel();
+    updateMainCircleVisibility();
   });
 
   const ownStoreLayer = L.layerGroup(
@@ -139,7 +151,7 @@ function initMap() {
         hoverPanel.style.top = `${point.y - 50}px`;
         hoverPanel.style.display = "block";
 
-        if (!fixedStoreCircles.has(ownMarker)) {
+        if (!fixedStoreCircles.has(ownMarker) && fixedStoreCircles.size === 0) {
           ownStoreHoverCircle = makeOwnStoreCircle(lat, lng).addTo(map);
         }
       });
@@ -152,9 +164,8 @@ function initMap() {
   document.getElementById("reset-fixed-circles-button").addEventListener("click", () => {
     fixedCircleHistory.forEach((entry) => map.removeLayer(entry.layer));
     fixedCircleHistory.length = 0;
-    const markers = Array.from(fixedStoreCircles.keys());
     fixedStoreCircles.clear();
-    markers.forEach((marker) => updateFixButtonLabel(marker));
+    updateMainCircleVisibility();
   });
 
   document.getElementById("undo-fixed-circle-button").addEventListener("click", () => {
@@ -165,8 +176,8 @@ function initMap() {
     map.removeLayer(lastEntry.layer);
     if (lastEntry.marker) {
       fixedStoreCircles.delete(lastEntry.marker);
-      updateFixButtonLabel(lastEntry.marker);
     }
+    updateMainCircleVisibility();
   });
 
   L.control
