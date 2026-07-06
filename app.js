@@ -292,9 +292,13 @@ async function updatePopulationPanel(meshCodes) {
 
   try {
     const results = await fetchAgePopulationInRadius(meshCodes);
+    const total = results.reduce((sum, r) => sum + r.value, 0);
     statusEl.textContent = "令和2年国勢調査（1kmメッシュ）に基づく集計";
     listEl.innerHTML = results
-      .map((r) => `<li><span>${r.label}</span><span>${r.value.toLocaleString()}人</span></li>`)
+      .map((r) => {
+        const pct = total > 0 ? (r.value / total * 100).toFixed(1) : "0.0";
+        return `<li><span>${r.label}</span><span>${r.value.toLocaleString()}人<span class="pct">（${pct}%）</span></span></li>`;
+      })
       .join("");
   } catch (error) {
     statusEl.textContent = "人口データの取得に失敗しました";
