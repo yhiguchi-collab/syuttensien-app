@@ -301,15 +301,11 @@ function recalculateEvaluation() {
     return;
   }
   const demandScore = parseInt(itemsEl.dataset.demandScore || "0");
+  const competitionScore = parseInt(itemsEl.dataset.competitionScore || "0");
   const salesScore = parseInt(itemsEl.dataset.salesScore || "0");
+  const mobilityScore = parseInt(itemsEl.dataset.mobilityScore || "0");
+  const hiringScore = parseInt(itemsEl.dataset.hiringScore || "0");
   const overlapScore = parseInt(itemsEl.dataset.overlapScore || "0");
-  const competitionScore = parseInt(document.querySelector('input[name="eval-competition"]:checked')?.value || "12");
-  const mobilityScore = parseInt(document.querySelector('input[name="eval-mobility"]:checked')?.value || "9");
-  const hiringScore = parseInt(document.querySelector('input[name="eval-hiring"]:checked')?.value || "9");
-
-  document.getElementById("eval-points-competition").textContent = `${competitionScore}点`;
-  document.getElementById("eval-points-mobility").textContent = `${mobilityScore}点`;
-  document.getElementById("eval-points-hiring").textContent = `${hiringScore}点`;
 
   const total = demandScore + competitionScore + salesScore + mobilityScore + hiringScore + overlapScore;
   const grade = total >= 80 ? "A" : total >= 60 ? "B" : "C";
@@ -320,8 +316,17 @@ function recalculateEvaluation() {
   document.getElementById("evaluation-score").textContent = `${total}点`;
 }
 
-document.querySelectorAll('input[name="eval-competition"], input[name="eval-mobility"], input[name="eval-hiring"]')
-  .forEach((radio) => radio.addEventListener("change", recalculateEvaluation));
+async function fetchHighwayIC(lat, lng, radiusMeters) {
+  try {
+    const query = `[out:json][timeout:10];node[highway=motorway_junction](around:${radiusMeters},${lat},${lng});out count;`;
+    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    const response = await fetch(url);
+    const json = await response.json();
+    return parseInt(json.elements[0]?.tags?.total || "0") > 0;
+  } catch (_) {
+    return false;
+  }
+}
 
 async function updateEvaluationPanel(lat, lng) {
   const statusEl = document.getElementById("evaluation-status");
@@ -331,16 +336,28 @@ async function updateEvaluationPanel(lat, lng) {
 
   const st5km = countFacilitiesInRadius(HOUKAN_ST_DATA, lat, lng, 5000);
   const hospital5km = countFacilitiesInRadius(HOSPITAL_GENERAL_DATA, lat, lng, 5000);
-
   const meshCodes5km = getMeshCodesInRadius(lat, lng, 5000);
+
+  // e-Stat人口 と 高速IC を並行取得
   let pop75plus = 0;
-  try {
-    const results5km = await fetchAgePopulationInRadius(meshCodes5km);
-    pop75plus = results5km.find((r) => r.label === "75歳以上")?.value || 0;
-  } catch (_) {
-    pop75plus = 0;
+  let totalPop5km = 0;
+  let workingAge5km = 0;
+  let hasHighwayIC = false;
+  const [popResult, highwayResult] = await Promise.allSettled([
+    fetchAgePopulationInRadius(meshCodes5km),
+    fetchHighwayIC(lat, lng, 5000),
+  ]);
+  if (popResult.status === "fulfilled") {
+    const r = popResult.value;
+    pop75plus = r.find((x) => x.label === "75歳以上")?.value || 0;
+    totalPop5km = r.length > 0 ? r[0].value : 0;
+    workingAge5km = r.find((x) => x.label === "15〜64歳")?.value || 0;
+  }
+  if (highwayResult.status === "fulfilled") {
+    hasHighwayIC = highwayResult.value;
   }
 
+  // 需要スコア（75歳以上 ÷ ST数）
   const demandRatio = st5km > 0 ? pop75plus / st5km : 0;
   let demandScore, demandLabel;
   if (demandRatio > 1500) { demandScore = 30; demandLabel = "多い"; }
@@ -350,6 +367,17 @@ async function updateEvaluationPanel(lat, lng) {
     `${pop75plus.toLocaleString()}人 ÷ ${st5km}件 = ${Math.round(demandRatio)}（${demandLabel}）`;
   document.getElementById("eval-points-demand").textContent = `${demandScore}点`;
 
+  // 競争スコア（ST密度 = ST数 ÷ 総人口万人）
+  const stDensity = totalPop5km > 0 ? st5km / (totalPop5km / 10000) : 0;
+  let competitionScore, competitionLabel;
+  if (stDensity < 1) { competitionScore = 20; competitionLabel = "空白あり"; }
+  else if (stDensity < 2) { competitionScore = 12; competitionLabel = "標準"; }
+  else { competitionScore = 4; competitionLabel = "激戦"; }
+  document.getElementById("eval-detail-competition").textContent =
+    `${st5km}件 ÷ ${(totalPop5km / 10000).toFixed(1)}万人 = ${stDensity.toFixed(2)}件/万人（${competitionLabel}）`;
+  document.getElementById("eval-points-competition").textContent = `${competitionScore}点`;
+
+  // 営業スコア（総合病院数）
   let salesScore, salesLabel;
   if (hospital5km >= 2) { salesScore = 20; salesLabel = "複数"; }
   else if (hospital5km === 1) { salesScore = 12; salesLabel = "1件"; }
@@ -358,6 +386,22 @@ async function updateEvaluationPanel(lat, lng) {
     `総合病院 ${hospital5km}件（${salesLabel}）`;
   document.getElementById("eval-points-sales").textContent = `${salesScore}点`;
 
+  // 移動効率スコア（高速IC有無）
+  const mobilityScore = hasHighwayIC ? 15 : 3;
+  document.getElementById("eval-detail-mobility").textContent =
+    `高速IC ${hasHighwayIC ? "あり" : "なし"}`;
+  document.getElementById("eval-points-mobility").textContent = `${mobilityScore}点`;
+
+  // 採用スコア（15〜64歳人口）
+  let hiringScore, hiringLabel;
+  if (workingAge5km >= 40000) { hiringScore = 15; hiringLabel = "良"; }
+  else if (workingAge5km >= 20000) { hiringScore = 9; hiringLabel = "普通"; }
+  else { hiringScore = 3; hiringLabel = "弱"; }
+  document.getElementById("eval-detail-hiring").textContent =
+    `${workingAge5km.toLocaleString()}人（${hiringLabel}）`;
+  document.getElementById("eval-points-hiring").textContent = `${hiringScore}点`;
+
+  // 重複スコア（自社店舗8km圏内）
   const nearbyOwn = OWN_STORE_DATA.filter(([sLat, sLng]) => haversineMeters(lat, lng, sLat, sLng) < 8000);
   let overlapScore = 0;
   if (nearbyOwn.length > 0) {
@@ -367,14 +411,16 @@ async function updateEvaluationPanel(lat, lng) {
     document.getElementById("eval-points-overlap").textContent = "−10点";
     document.getElementById("eval-row-overlap").classList.add("eval-overlap-warning");
   } else {
-    overlapScore = 0;
     document.getElementById("eval-detail-overlap").textContent = "重複なし";
     document.getElementById("eval-points-overlap").textContent = "0点";
     document.getElementById("eval-row-overlap").classList.remove("eval-overlap-warning");
   }
 
   itemsEl.dataset.demandScore = demandScore;
+  itemsEl.dataset.competitionScore = competitionScore;
   itemsEl.dataset.salesScore = salesScore;
+  itemsEl.dataset.mobilityScore = mobilityScore;
+  itemsEl.dataset.hiringScore = hiringScore;
   itemsEl.dataset.overlapScore = overlapScore;
   itemsEl.style.display = "block";
   statusEl.textContent = "";
