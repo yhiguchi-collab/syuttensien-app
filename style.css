@@ -177,6 +177,87 @@ main {
   color: #d6336c;
 }
 
+.section-divider {
+  border: none;
+  border-top: 2px solid #e0e0e0;
+  margin: 12px 0;
+}
+
+#evaluation-grade-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+
+#evaluation-grade {
+  font-size: 28px;
+  font-weight: bold;
+  width: 36px;
+  text-align: center;
+}
+
+.eval-grade-A { color: #2a9d2a; }
+.eval-grade-B { color: #e67e00; }
+.eval-grade-C { color: #d6336c; }
+
+#evaluation-score {
+  font-size: 15px;
+  color: #555;
+}
+
+#evaluation-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+#evaluation-table .eval-row td {
+  padding: 6px 4px;
+  border-bottom: 1px solid #e0e0e0;
+  vertical-align: top;
+}
+
+.eval-name {
+  width: 72px;
+  font-weight: bold;
+  color: #2c5f7c;
+  white-space: nowrap;
+}
+
+.eval-name small {
+  font-weight: normal;
+  color: #888;
+  font-size: 11px;
+}
+
+.eval-detail {
+  color: #444;
+  line-height: 1.6;
+}
+
+.eval-detail label {
+  display: block;
+  cursor: pointer;
+}
+
+.eval-points {
+  width: 46px;
+  text-align: right;
+  font-weight: bold;
+  white-space: nowrap;
+  color: #2c5f7c;
+}
+
+#eval-row-overlap.eval-overlap-warning td {
+  color: #d6336c;
+}
+
+#eval-row-overlap.eval-overlap-warning .eval-points {
+  color: #d6336c;
+}
+
 #population-list {
   list-style: none;
   margin-top: 8px;

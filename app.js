@@ -254,6 +254,7 @@ function setPoint(lat, lng, zoom) {
 
   const meshCodes = getMeshCodesInRadius(lat, lng, RADIUS_METERS);
   updatePopulationPanel(meshCodes);
+  updateEvaluationPanel(lat, lng);
   updateChiikiKubunPanel(lat, lng);
   updateHoukanStPanel(lat, lng);
   updateHospitalPanel(lat, lng);
@@ -292,6 +293,92 @@ function setPoint(lat, lng, zoom) {
       weight: 3,
     }).addTo(map);
   }
+}
+
+function recalculateEvaluation() {
+  const itemsEl = document.getElementById("evaluation-items");
+  if (!itemsEl || itemsEl.style.display === "none") {
+    return;
+  }
+  const demandScore = parseInt(itemsEl.dataset.demandScore || "0");
+  const salesScore = parseInt(itemsEl.dataset.salesScore || "0");
+  const overlapScore = parseInt(itemsEl.dataset.overlapScore || "0");
+  const competitionScore = parseInt(document.querySelector('input[name="eval-competition"]:checked')?.value || "12");
+  const mobilityScore = parseInt(document.querySelector('input[name="eval-mobility"]:checked')?.value || "9");
+  const hiringScore = parseInt(document.querySelector('input[name="eval-hiring"]:checked')?.value || "9");
+
+  document.getElementById("eval-points-competition").textContent = `${competitionScore}点`;
+  document.getElementById("eval-points-mobility").textContent = `${mobilityScore}点`;
+  document.getElementById("eval-points-hiring").textContent = `${hiringScore}点`;
+
+  const total = demandScore + competitionScore + salesScore + mobilityScore + hiringScore + overlapScore;
+  const grade = total >= 80 ? "A" : total >= 60 ? "B" : "C";
+
+  const gradeEl = document.getElementById("evaluation-grade");
+  gradeEl.textContent = grade;
+  gradeEl.className = `eval-grade-${grade}`;
+  document.getElementById("evaluation-score").textContent = `${total}点`;
+}
+
+document.querySelectorAll('input[name="eval-competition"], input[name="eval-mobility"], input[name="eval-hiring"]')
+  .forEach((radio) => radio.addEventListener("change", recalculateEvaluation));
+
+async function updateEvaluationPanel(lat, lng) {
+  const statusEl = document.getElementById("evaluation-status");
+  const itemsEl = document.getElementById("evaluation-items");
+  statusEl.textContent = "評価を計算中…";
+  itemsEl.style.display = "none";
+
+  const st5km = countFacilitiesInRadius(HOUKAN_ST_DATA, lat, lng, 5000);
+  const hospital5km = countFacilitiesInRadius(HOSPITAL_GENERAL_DATA, lat, lng, 5000);
+
+  const meshCodes5km = getMeshCodesInRadius(lat, lng, 5000);
+  let pop75plus = 0;
+  try {
+    const results5km = await fetchAgePopulationInRadius(meshCodes5km);
+    pop75plus = results5km.find((r) => r.label === "75歳以上")?.value || 0;
+  } catch (_) {
+    pop75plus = 0;
+  }
+
+  const demandRatio = st5km > 0 ? pop75plus / st5km : 0;
+  let demandScore, demandLabel;
+  if (demandRatio > 1500) { demandScore = 30; demandLabel = "多い"; }
+  else if (demandRatio >= 800) { demandScore = 18; demandLabel = "普通"; }
+  else { demandScore = 6; demandLabel = "少ない"; }
+  document.getElementById("eval-detail-demand").textContent =
+    `${pop75plus.toLocaleString()}人 ÷ ${st5km}件 = ${Math.round(demandRatio)}（${demandLabel}）`;
+  document.getElementById("eval-points-demand").textContent = `${demandScore}点`;
+
+  let salesScore, salesLabel;
+  if (hospital5km >= 2) { salesScore = 20; salesLabel = "複数"; }
+  else if (hospital5km === 1) { salesScore = 12; salesLabel = "1件"; }
+  else { salesScore = 4; salesLabel = "なし"; }
+  document.getElementById("eval-detail-sales").textContent =
+    `総合病院 ${hospital5km}件（${salesLabel}）`;
+  document.getElementById("eval-points-sales").textContent = `${salesScore}点`;
+
+  const nearbyOwn = OWN_STORE_DATA.filter(([sLat, sLng]) => haversineMeters(lat, lng, sLat, sLng) < 8000);
+  let overlapScore = 0;
+  if (nearbyOwn.length > 0) {
+    overlapScore = -10;
+    document.getElementById("eval-detail-overlap").textContent =
+      nearbyOwn.map((s) => s[2].replace("訪問看護ステーションととのい ", "")).join("・") + " が8km圏内";
+    document.getElementById("eval-points-overlap").textContent = "−10点";
+    document.getElementById("eval-row-overlap").classList.add("eval-overlap-warning");
+  } else {
+    overlapScore = 0;
+    document.getElementById("eval-detail-overlap").textContent = "重複なし";
+    document.getElementById("eval-points-overlap").textContent = "0点";
+    document.getElementById("eval-row-overlap").classList.remove("eval-overlap-warning");
+  }
+
+  itemsEl.dataset.demandScore = demandScore;
+  itemsEl.dataset.salesScore = salesScore;
+  itemsEl.dataset.overlapScore = overlapScore;
+  itemsEl.style.display = "block";
+  statusEl.textContent = "";
+  recalculateEvaluation();
 }
 
 async function updatePopulationPanel(meshCodes) {

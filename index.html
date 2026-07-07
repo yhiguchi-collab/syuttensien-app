@@ -29,6 +29,64 @@
     <div id="map-row">
       <div id="map"></div>
       <div id="info-panel">
+        <div id="evaluation-section">
+          <h2>出店適性評価（5km圏）</h2>
+          <p id="evaluation-status" class="hint">地点を指定すると評価を計算します</p>
+          <div id="evaluation-items" style="display:none">
+            <div id="evaluation-grade-row">
+              <span>総合判定</span>
+              <span id="evaluation-grade">―</span>
+              <span id="evaluation-score"></span>
+            </div>
+            <table id="evaluation-table">
+              <tbody>
+                <tr class="eval-row">
+                  <td class="eval-name">需要<br><small>75歳以上÷ST数</small></td>
+                  <td class="eval-detail" id="eval-detail-demand">―</td>
+                  <td class="eval-points" id="eval-points-demand">―</td>
+                </tr>
+                <tr class="eval-row">
+                  <td class="eval-name">競争<br><small>地理的空白</small></td>
+                  <td class="eval-detail">
+                    <label><input type="radio" name="eval-competition" value="20"> 空白あり</label>
+                    <label><input type="radio" name="eval-competition" value="12" checked> 標準</label>
+                    <label><input type="radio" name="eval-competition" value="4"> 激戦</label>
+                  </td>
+                  <td class="eval-points" id="eval-points-competition">12点</td>
+                </tr>
+                <tr class="eval-row">
+                  <td class="eval-name">営業<br><small>連携候補病院</small></td>
+                  <td class="eval-detail" id="eval-detail-sales">―</td>
+                  <td class="eval-points" id="eval-points-sales">―</td>
+                </tr>
+                <tr class="eval-row">
+                  <td class="eval-name">移動効率<br><small>道路・地形</small></td>
+                  <td class="eval-detail">
+                    <label><input type="radio" name="eval-mobility" value="15"> 良好</label>
+                    <label><input type="radio" name="eval-mobility" value="9" checked> 片方難</label>
+                    <label><input type="radio" name="eval-mobility" value="3"> 両方難</label>
+                  </td>
+                  <td class="eval-points" id="eval-points-mobility">9点</td>
+                </tr>
+                <tr class="eval-row">
+                  <td class="eval-name">採用<br><small>駅・若手魅力</small></td>
+                  <td class="eval-detail">
+                    <label><input type="radio" name="eval-hiring" value="15"> 良</label>
+                    <label><input type="radio" name="eval-hiring" value="9" checked> 片方</label>
+                    <label><input type="radio" name="eval-hiring" value="3"> 弱</label>
+                  </td>
+                  <td class="eval-points" id="eval-points-hiring">9点</td>
+                </tr>
+                <tr class="eval-row" id="eval-row-overlap">
+                  <td class="eval-name">重複<br><small>既存5拠点</small></td>
+                  <td class="eval-detail" id="eval-detail-overlap">―</td>
+                  <td class="eval-points" id="eval-points-overlap">0点</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <hr class="section-divider">
         <h2 id="population-heading">半径10km圏内の年齢別人口</h2>
         <p id="info-status" class="hint">地点を指定すると表示されます</p>
         <ul id="population-list"></ul>
