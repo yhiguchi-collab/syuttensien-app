@@ -161,6 +161,19 @@ function initMap() {
     })
   ).addTo(map);
 
+  const kikanTokushiLayer = L.layerGroup(
+    KIKAN_TOKUSHI_DATA.map(([lat, lng, name, type]) => {
+      const color = type === '基幹相談支援センター' ? '#e040fb' : '#ff69b4';
+      return L.circleMarker([lat, lng], {
+        radius: 5,
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.7,
+        weight: 1,
+      }).bindPopup(`<b>${type}</b><br>${name}`);
+    })
+  );
+
   document.getElementById("reset-fixed-circles-button").addEventListener("click", () => {
     fixedCircleHistory.forEach((entry) => map.removeLayer(entry.layer));
     fixedCircleHistory.length = 0;
@@ -183,7 +196,7 @@ function initMap() {
   L.control
     .layers(
       { "地図": streetLayer, "航空写真": satelliteLayer },
-      { "地名ラベル": labelsLayer, "自社店舗": ownStoreLayer }
+      { "地名ラベル": labelsLayer, "自社店舗": ownStoreLayer, "基幹相談・特支学校": kikanTokushiLayer }
     )
     .addTo(map);
 
