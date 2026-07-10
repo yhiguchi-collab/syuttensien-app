@@ -16,6 +16,7 @@ function initMap() {
   map = L.map("map", {
     maxBounds: worldBounds,
     maxBoundsViscosity: 1.0,
+    closePopupOnClick: false,
   }).setView(DEFAULT_CENTER, 11);
 
   const GSI_ATTRIBUTION = '&copy; <a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>';
@@ -161,18 +162,58 @@ function initMap() {
     })
   ).addTo(map);
 
-  const kikanTokushiLayer = L.layerGroup(
-    KIKAN_TOKUSHI_DATA.map(([lat, lng, name, type]) => {
-      const color = type === '基幹相談支援センター' ? '#e040fb' : '#ff69b4';
-      return L.circleMarker([lat, lng], {
-        radius: 5,
-        color: color,
-        fillColor: color,
-        fillOpacity: 0.7,
-        weight: 1,
-      }).bindPopup(`<b>${type}</b><br>${name}`);
-    })
+  const kikanLayer  = makeCircleLayer(
+    KIKAN_TOKUSHI_DATA.filter(([,,,type]) => type === '基幹相談支援センター'),
+    '#e040fb', '基幹相談支援センター'
   );
+  const tokushiLayer = makeCircleLayer(
+    KIKAN_TOKUSHI_DATA.filter(([,,,type]) => type === '特別支援学校'),
+    '#ff69b4', '特別支援学校'
+  );
+
+  function makeCircleLayer(data, color, label) {
+    const group = L.layerGroup();
+    let built = false;
+    // レイヤーが初めてオンになったときだけマーカーを生成（1000件ずつ分割追加）
+    group.on('add', function () {
+      if (built) return;
+      built = true;
+      let i = 0;
+      function addChunk() {
+        const end = Math.min(i + 1000, data.length);
+        for (; i < end; i++) {
+          const [lat, lng, name] = data[i];
+          L.circleMarker([lat, lng], {
+            radius: 5,
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.7,
+            weight: 1,
+            bubblingMouseEvents: false,
+          }).on('click', function () {
+            L.popup()
+              .setLatLng(this.getLatLng())
+              .setContent(`<b>${label}</b><br>${name}`)
+              .openOn(map);
+          }).addTo(group);
+        }
+        if (i < data.length) setTimeout(addChunk, 0);
+      }
+      addChunk();
+    });
+    return group;
+  }
+
+  const houkanStLayer       = makeCircleLayer(HOUKAN_ST_DATA,                    '#00bcd4', '訪問看護ステーション');
+  const hospitalGeneralLayer = makeCircleLayer(HOSPITAL_GENERAL_DATA,            '#f44336', '総合病院');
+  const hospitalPsychLayer   = makeCircleLayer(HOSPITAL_PSYCHIATRIC_DATA,        '#ff9800', '精神科病院');
+  const homeVisitLayer       = makeCircleLayer(HOME_VISIT_CLINIC_DATA,           '#9c27b0', '訪問診療医療機関');
+  const caremanagerLayer     = makeCircleLayer(CAREMANAGER_OFFICE_DATA,          '#4caf50', '居宅介護支援事業所');
+  const comprehensiveLayer   = makeCircleLayer(COMPREHENSIVE_SUPPORT_CENTER_DATA,'#2196f3', '地域包括支援センター');
+  const consultationLayer    = makeCircleLayer(CONSULTATION_OFFICE_DATA,         '#795548', '相談支援事業所');
+  const shrouBLayer          = makeCircleLayer(SHUROU_B_DATA,                    '#607d8b', '就労継続支援B型');
+  const seishinClinicLayer   = makeCircleLayer(SEISHIN_CLINIC_DATA,              '#e91e63', '精神科クリニック');
+  const groupHomeLayer       = makeCircleLayer(GROUP_HOME_DATA,                  '#009688', '障害者グループホーム');
 
   document.getElementById("reset-fixed-circles-button").addEventListener("click", () => {
     fixedCircleHistory.forEach((entry) => map.removeLayer(entry.layer));
@@ -193,10 +234,29 @@ function initMap() {
     updateMainCircleVisibility();
   });
 
+  function dot(color) {
+    return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:5px;vertical-align:middle;"></span>`;
+  }
+
   L.control
     .layers(
       { "地図": streetLayer, "航空写真": satelliteLayer },
-      { "地名ラベル": labelsLayer, "自社店舗": ownStoreLayer, "基幹相談・特支学校": kikanTokushiLayer }
+      {
+        "地名ラベル": labelsLayer,
+        "自社店舗": ownStoreLayer,
+        [`${dot('#e040fb')}基幹相談支援センター`]: kikanLayer,
+        [`${dot('#ff69b4')}特別支援学校`]: tokushiLayer,
+        [`${dot('#00bcd4')}訪看ST`]: houkanStLayer,
+        [`${dot('#f44336')}総合病院`]: hospitalGeneralLayer,
+        [`${dot('#ff9800')}精神科病院`]: hospitalPsychLayer,
+        [`${dot('#9c27b0')}訪問診療`]: homeVisitLayer,
+        [`${dot('#4caf50')}ケアマネ`]: caremanagerLayer,
+        [`${dot('#2196f3')}地域包括`]: comprehensiveLayer,
+        [`${dot('#795548')}相談支援`]: consultationLayer,
+        [`${dot('#607d8b')}就労B型`]: shrouBLayer,
+        [`${dot('#e91e63')}精神科クリニック`]: seishinClinicLayer,
+        [`${dot('#009688')}障害者GH`]: groupHomeLayer,
+      }
     )
     .addTo(map);
 
@@ -291,6 +351,7 @@ function setPoint(lat, lng, zoom) {
       color: "#ffffff",
       weight: 6,
       fill: false,
+      interactive: false,
     }).addTo(map);
   }
 
@@ -304,6 +365,7 @@ function setPoint(lat, lng, zoom) {
       fillColor: "#d6336c",
       fillOpacity: 0.1,
       weight: 3,
+      interactive: false,
     }).addTo(map);
   }
 }
