@@ -178,28 +178,23 @@ function initMap() {
     group.on('add', function () {
       if (built) return;
       built = true;
-      let i = 0;
-      function addChunk() {
-        const end = Math.min(i + 1000, data.length);
-        for (; i < end; i++) {
-          const [lat, lng, name] = data[i];
-          L.circleMarker([lat, lng], {
-            radius: 5,
-            color: color,
-            fillColor: color,
-            fillOpacity: 0.7,
-            weight: 1,
-            bubblingMouseEvents: false,
-          }).on('click', function () {
-            L.popup()
-              .setLatLng(this.getLatLng())
-              .setContent(`<b>${label}</b><br>${name}`)
-              .openOn(map);
-          }).addTo(group);
-        }
-        if (i < data.length) setTimeout(addChunk, 0);
+      const renderer = L.canvas({ tolerance: 5 });
+      for (const [lat, lng, name] of data) {
+        L.circleMarker([lat, lng], {
+          radius: 5,
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.7,
+          weight: 1,
+          renderer: renderer,
+          bubblingMouseEvents: false,
+        }).on('click', function () {
+          L.popup()
+            .setLatLng(this.getLatLng())
+            .setContent(`<b>${label}</b><br>${name}`)
+            .openOn(map);
+        }).addTo(group);
       }
-      addChunk();
     });
     return group;
   }
