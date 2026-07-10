@@ -282,3 +282,69 @@ main {
   mix-blend-mode: multiply;
   filter: contrast(1.6) saturate(0.4);
 }
+
+/* ============================================================
+   レスポンシブ対応
+   ============================================================ */
+
+/* iPad縦（〜900px）: 検索パネル折り返し・情報パネル幅縮小 */
+@media (max-width: 900px) {
+  #search-panel {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+  }
+
+  #address-input {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+
+  #info-panel {
+    flex: 0 0 220px;
+  }
+}
+
+/* iPhone（〜600px）: 縦並びレイアウト */
+@media (max-width: 600px) {
+  body {
+    height: 100svh; /* iOS Safariアドレスバー対応 */
+  }
+
+  header h1 {
+    font-size: 15px;
+  }
+
+  #search-panel {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  #address-input {
+    flex: 1 1 140px;
+    font-size: 16px; /* iOS自動ズームを防ぐため16px以上に */
+  }
+
+  /* ヒントテキストは画面が狭いため非表示 */
+  #search-panel .hint {
+    display: none;
+  }
+
+  /* 地図と情報パネルを縦並びに */
+  #map-row {
+    flex-direction: column;
+  }
+
+  #map {
+    flex: 0 0 52svh;
+    min-height: 250px;
+  }
+
+  #info-panel {
+    flex: 1;
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #ddd;
+    overflow-y: auto;
+  }
+}
