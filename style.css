@@ -154,6 +154,7 @@ main {
 
 #info-panel {
   flex: 0 0 280px;
+  min-width: 0;
   padding: 16px;
   background-color: #f4f6f7;
   border-left: 1px solid #ddd;
@@ -209,6 +210,7 @@ main {
 
 #evaluation-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -223,7 +225,7 @@ main {
   width: 72px;
   font-weight: bold;
   color: #2c5f7c;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .eval-name small {
@@ -243,10 +245,10 @@ main {
 }
 
 .eval-points {
-  width: 46px;
+  width: 56px;
   text-align: right;
   font-weight: bold;
-  white-space: nowrap;
+  overflow-wrap: break-word;
   color: #2c5f7c;
 }
 
