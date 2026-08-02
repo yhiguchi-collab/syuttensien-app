@@ -421,7 +421,10 @@ async function updateEvaluationPanel(lat, lng) {
     const r = popResult.value;
     pop75plus = r.find((x) => x.label === "75歳以上")?.value || 0;
     totalPop5km = r.length > 0 ? r[0].value : 0;
-    workingAge5km = r.find((x) => x.label === "15〜64歳")?.value || 0;
+    // 20〜64歳人口 = 20歳以上人口 − 65歳以上人口（e-Statのメッシュ統計に45歳区切りが無いため代替）
+    const age20plus = r.find((x) => x.label === "20歳以上")?.value || 0;
+    const age65plus = r.find((x) => x.label === "65歳以上")?.value || 0;
+    workingAge5km = Math.max(age20plus - age65plus, 0);
   }
   if (highwayResult.status === "fulfilled") {
     hasHighwayIC = highwayResult.value;
@@ -462,7 +465,7 @@ async function updateEvaluationPanel(lat, lng) {
     `高速IC ${hasHighwayIC ? "あり" : "なし"}`;
   document.getElementById("eval-points-mobility").textContent = `${mobilityScore}点`;
 
-  // 採用スコア（15〜64歳人口）
+  // 採用スコア（20〜64歳人口）
   let hiringScore, hiringLabel;
   if (workingAge5km >= 40000) { hiringScore = 15; hiringLabel = "良"; }
   else if (workingAge5km >= 20000) { hiringScore = 9; hiringLabel = "普通"; }
@@ -509,6 +512,7 @@ async function updatePopulationPanel(meshCodes) {
     const totalPop = results.length > 0 ? results[0].value : 0; // 総人口（先頭行）を分母にする
     statusEl.textContent = "令和2年国勢調査（1kmメッシュ）に基づく集計";
     listEl.innerHTML = results
+      .filter((r) => r.label !== "20歳以上") // 採用スコア計算専用の内部カテゴリなので一覧には出さない
       .map((r, i) => {
         const pct = i === 0 ? "" : (totalPop > 0 ? `<span class="pct">（${(r.value / totalPop * 100).toFixed(1)}%）</span>` : "");
         return `<li><span>${r.label}</span><span>${r.value.toLocaleString()}人${pct}</span></li>`;
