@@ -1,0 +1,12 @@
+{
+  "name": "syuttensien-app-data-scripts",
+  "private": true,
+  "description": "データ自動更新スクリプト用（アプリ本体はビルド不要）",
+  "scripts": {
+    "update:kaigo": "node scripts/update-kaigo-opendata.js",
+    "update:home-visit-clinic": "node scripts/update-home-visit-clinic.js"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}

@@ -3,3 +3,5 @@ desktop.ini
 .DS_Store
 *.env
 .env
+.jmap-progress.json
+.jmap-geocode-progress.json

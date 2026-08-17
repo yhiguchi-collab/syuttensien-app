@@ -406,6 +406,9 @@ async function updateEvaluationPanel(lat, lng) {
 
   const st5km = countFacilitiesInRadius(HOUKAN_ST_DATA, lat, lng, 5000);
   const hospital5km = countFacilitiesInRadius(HOSPITAL_GENERAL_DATA, lat, lng, 5000);
+  const psychiatric5km = countFacilitiesInRadius(HOSPITAL_PSYCHIATRIC_DATA, lat, lng, 5000);
+  const caremanager5km = countFacilitiesInRadius(CAREMANAGER_OFFICE_DATA, lat, lng, 5000);
+  const consultation5km = countFacilitiesInRadius(CONSULTATION_OFFICE_DATA, lat, lng, 5000);
   const meshCodes5km = getMeshCodesInRadius(lat, lng, 5000);
 
   // e-Stat人口 と 高速IC を並行取得
@@ -450,13 +453,14 @@ async function updateEvaluationPanel(lat, lng) {
     `${st5km}件 ÷ ${(totalPop5km / 10000).toFixed(1)}万人 = ${stDensity.toFixed(2)}件/万人（${competitionLabel}）`;
   document.getElementById("eval-points-competition").textContent = `${competitionScore}点`;
 
-  // 営業スコア（総合病院数）
+  // 営業スコア（連携候補＝総合病院＋精神科病院＋ケアマネ事業所＋相談支援事業所の合計）
+  const salesTotal = hospital5km + psychiatric5km + caremanager5km + consultation5km;
   let salesScore, salesLabel;
-  if (hospital5km >= 2) { salesScore = 20; salesLabel = "複数"; }
-  else if (hospital5km === 1) { salesScore = 12; salesLabel = "1件"; }
-  else { salesScore = 4; salesLabel = "なし"; }
+  if (salesTotal >= 200) { salesScore = 20; salesLabel = "多い"; }
+  else if (salesTotal >= 99) { salesScore = 12; salesLabel = "標準"; }
+  else { salesScore = 4; salesLabel = "少ない"; }
   document.getElementById("eval-detail-sales").textContent =
-    `総合病院 ${hospital5km}件（${salesLabel}）`;
+    `病院${hospital5km + psychiatric5km}件+ケアマネ${caremanager5km}件+相談支援${consultation5km}件 = ${salesTotal}件（${salesLabel}）`;
   document.getElementById("eval-points-sales").textContent = `${salesScore}点`;
 
   // 移動効率スコア（高速IC有無）
@@ -578,7 +582,7 @@ function updateHospitalPanel(lat, lng) {
 function updateHomeVisitPanel(lat, lng) {
   const statusEl = document.getElementById("home-visit-status");
   const count = countFacilitiesInRadius(HOME_VISIT_CLINIC_DATA, lat, lng, RADIUS_METERS);
-  statusEl.textContent = `${count.toLocaleString()}件（在宅療養支援診療所・病院＝機能強化型のみ）`;
+  statusEl.textContent = `${count.toLocaleString()}件（在宅療養支援診療所・病院）`;
 }
 
 function updateCaremanagerPanel(lat, lng) {
