@@ -386,14 +386,29 @@ function recalculateEvaluation() {
   document.getElementById("evaluation-score").textContent = `${total}点`;
 }
 
-async function fetchHighwayIC(lat, lng, radiusMeters) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Overpass APIは無料の共有サービスで、混雑時に一時的に失敗することがある
+// （実測でも5回に1回ほど429エラーを確認）。表示を複雑にしないよう、
+// 失敗しても画面には出さず裏側で最大3回まで試し、それでもダメなら「なし」として扱う。
+async function fetchHighwayIC(lat, lng, radiusMeters, attempt) {
+  attempt = attempt || 1;
   try {
     const query = `[out:json][timeout:10];node[highway=motorway_junction](around:${radiusMeters},${lat},${lng});out count;`;
     const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
     const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Overpass API HTTP " + response.status);
+    }
     const json = await response.json();
     return parseInt(json.elements[0]?.tags?.total || "0") > 0;
   } catch (_) {
+    if (attempt < 3) {
+      await sleep(1500);
+      return fetchHighwayIC(lat, lng, radiusMeters, attempt + 1);
+    }
     return false;
   }
 }
